@@ -1,6 +1,8 @@
 //1.필요한 상수 생성하기
 
 const spreadSheetContainer = document.querySelector("#spreadsheet_container");
+const exportBtn = document.querySelector("#export_btn");
+const cellStatus = document.querySelector("#cell_status");
 const ROWS = 10;
 const COLS = 10;
 const spreadsheet = [];
@@ -34,6 +36,29 @@ const alphabets = [
   "Z",
 ];
 
+//입력한 input 데이터 ,,,,,방식으로 출력하기
+exportBtn.onclick = function () {
+  let csv = "";
+  for (let i = 0; i < spreadsheet.length; i++) {
+    if (i === 0) continue; // 다운로드시 isheader부분 제거
+    csv +=
+      spreadsheet[i]
+        .filter((item) => !item.isHeader)
+        .map((item) => item.data)
+        .join(",") + "\r\n";
+  }
+  console.log(csv);
+
+  // 엑셀 다운로드 url만들기
+  const csvObj = new Blob([csv]);
+  const csvUrl = URL.createObjectURL(csvObj);
+  console.log("csvUrl", csvUrl);
+  // 엑셀 다운로드 파일띄우기
+  const a = document.createElement("a");
+  a.href = csvUrl;
+  a.download = `spreadsheet name.csv`;
+  a.click();
+};
 //3.  Cell 클래스 생성
 class Cell {
   constructor(
@@ -100,7 +125,6 @@ function spreadsheetData() {
     spreadsheet.push(spreadsheetRow); //위의 한줄씩 만든걸 추가
   }
 
-  console.log(spreadsheet);
   drawSheet();
 }
 
@@ -117,8 +141,13 @@ function createCellEl(cell) {
   }
 
   cellEl.addEventListener("click", () => handleCellClick(cell));
+  cellEl.onchange = (e) => handleOnChange(e.target.value, cell);
 
   return cellEl;
+}
+
+function handleOnChange(data, cell) {
+  cell.data = data;
 }
 
 function handleCellClick(cell) {
@@ -132,6 +161,9 @@ function handleCellClick(cell) {
   console.log("clicked cell:", columnHeaderEl, rowHeaderEl);
   columnHeaderEl.classList.add("active");
   rowHeaderEl.classList.add("active");
+
+  //클릭한셀 위치 보여주기
+  cellStatus.innerHTML = `${cell.columnName},${cell.rowName}`;
 }
 
 //누적클릭된 header들의 active지워주는 함수
